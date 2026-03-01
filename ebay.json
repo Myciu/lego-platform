@@ -1,0 +1,43 @@
+{
+  "provider": "ebay",
+  "request": {
+    "method": "GET",
+    "url": "https://api.ebay.com/buy/browse/v1/item_summary/search?q=lego+3004+brick+1+x+2+black&limit=20&filter=buyingOptions%3A%7BFIXED_PRICE%7CAUCTION%7D&fieldgroups=MATCHING_ITEMS",
+    "marketplaceId": "EBAY_PL"
+  },
+  "status": 200,
+  "response": {
+    "firstItemSummary": {
+      "itemId": "v1|127448774031|0",
+      "title": "3004 Cegła 1X2 Czarne cegły 50 sztuk Cegły, sztuki i części w 100% kompatybilne",
+      "price": {
+        "value": "43.70",
+        "currency": "PLN",
+        "convertedFromValue": "12.20",
+        "convertedFromCurrency": "USD"
+      },
+      "seller": {
+        "username": "trontooyork",
+        "feedbackPercentage": "100.0",
+        "feedbackScore": 33
+      },
+      "condition": "New",
+      "shippingOptions": [
+        {
+          "shippingCostType": "FIXED",
+          "shippingCost": {
+            "value": "0.00",
+            "currency": "PLN",
+            "convertedFromValue": "0.00",
+            "convertedFromCurrency": "USD"
+          }
+        }
+      ],
+      "itemWebUrl": "https://www.ebay.pl/itm/127448774031?...",
+      "itemLocation": {
+        "country": "CN"
+      },
+      "listingMarketplaceId": "EBAY_US"
+    }
+  }
+}

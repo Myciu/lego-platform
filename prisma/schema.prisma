@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // lub "sqlite" / "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Part {
+  id          Int          @id @default(autoincrement())
+  designId    String       @unique
+  name        String
+  imageUrl    String?
+  partCatId   Int?
+  partIds     Json?        // Zewnętrzne ID (Allegro)
+  partCategory PartCategory? @relation(fields: [partCatId], references: [id], onDelete: SetNull)
+  
+  // Relacja: Jeden klocek może występować w wielu kolorach
+  colors      PartColor[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PartCategory {
+  id        Int     @id // ID z Rebrickable
+  name      String
+  partCount Int
+  parts     Part[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Color {
+  id          Int          @id // ID z Rebrickable (to będzie nasz klucz)
+  name        String
+  rgb         String
+  isTrans     Boolean?     // Czy przezroczysty (opcjonalne, ale API to zwraca)
+  
+  // Relacja: Jeden kolor może być przypisany do wielu klocków
+  parts       PartColor[]
+}
+
+// Tabela łącząca (Pivot Table)
+model PartColor {
+  part        Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  partId      Int
+  
+  color       Color    @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  colorId     Int
+
+  // Unikalna para: dany klocek w danym kolorze tylko raz
+  @@id([partId, colorId])
+}

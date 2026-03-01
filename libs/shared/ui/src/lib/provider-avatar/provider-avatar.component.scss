@@ -1,0 +1,28 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.source-avatar {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.source-avatar img {
+  object-fit: contain;
+  display: block;
+}
+
+.source-avatar-fallback {
+  font-weight: 800;
+  color: #334155;
+  line-height: 1;
+  text-transform: uppercase;
+}

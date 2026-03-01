@@ -1,0 +1,39 @@
+{
+  "provider": "erli",
+  "request": {
+    "method": "GET",
+    "url": "https://erli.pl/klocki-pojedyncze-elementy,15817?phrase=lego%203004%20brick%201%20x%202%20black&page=1&perPage=20"
+  },
+  "status": 200,
+  "response": {
+    "firstProduct": {
+      "id": 276955465,
+      "name": "LEGO 3004 brick Cegiełka 1x2 Czarny Black 20 szt",
+      "price": 922,
+      "brand": "LEGO",
+      "stock": 4,
+      "deliveryMinPrice": 1049,
+      "shop": {
+        "name": "KING-RIPPER",
+        "shopId": 93983,
+        "shopRatings": {
+          "negativesAmount": 2,
+          "positivesAmount": 39,
+          "positivesPercent": 95.1
+        }
+      },
+      "slug": "lego-3004-brick-cegielka-1x2-czarny-black-20-szt",
+      "mainCategory": {
+        "name": "Elementy",
+        "id": 15817,
+        "slug": "klocki-pojedyncze-elementy"
+      },
+      "images": [
+        {
+          "baseUrl": "https://i.erli.pl/o5gar2.6ceb69",
+          "alt": "lego-3004-brick-cegielka-1x2-czarny-black-20-szt"
+        }
+      ]
+    }
+  }
+}

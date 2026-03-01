@@ -1,0 +1,53 @@
+{
+  "provider": "allegro",
+  "request": {
+    "method": "GET",
+    "url": "https://api.allegro.pl/offers/listing?phrase=lego+3004+brick+1+x+2+black&fallback=true&limit=20&marketplaceId=allegro-pl&sort=%2Bprice&searchMode=REGULAR&sellingMode.format=BUY_NOW"
+  },
+  "status": 200,
+  "response": {
+    "firstRegular": {
+      "id": "17455367609",
+      "name": "LEGO Klocek zwykły 1x2 3004 300426 czarny black",
+      "seller": {
+        "id": "11726004",
+        "login": "Clipper_ST",
+        "company": true,
+        "superSeller": true
+      },
+      "promotion": {
+        "emphasized": false,
+        "bold": false,
+        "highlight": false
+      },
+      "delivery": {
+        "availableForFree": false,
+        "lowestPrice": {
+          "amount": "4.49",
+          "currency": "PLN"
+        }
+      },
+      "images": [
+        {
+          "url": "https://a.allegroimg.com/original/1101d4/34cccece41649502aca1b68cbc68/LEGO-Klocek-zwykly-1x2-3004-300426-czarny-black"
+        }
+      ],
+      "sellingMode": {
+        "format": "BUY_NOW",
+        "price": {
+          "amount": "1.00",
+          "currency": "PLN"
+        },
+        "popularity": 0,
+        "popularityRange": "0"
+      },
+      "stock": {
+        "unit": "UNIT",
+        "available": 4
+      },
+      "category": {
+        "id": "305685"
+      }
+    }
+  }
+}

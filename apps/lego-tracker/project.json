@@ -1,0 +1,75 @@
+{
+  "name": "lego-tracker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/lego-tracker/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/lego-tracker",
+        "browser": "apps/lego-tracker/src/main.ts",
+        "tsConfig": "apps/lego-tracker/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/lego-tracker/public"
+          }
+        ],
+        "styles": ["apps/lego-tracker/src/styles.scss"],
+        "server": "apps/lego-tracker/src/main.server.ts",
+        "ssr": {
+          "entry": "apps/lego-tracker/src/server.ts"
+        },
+        "outputMode": "server"
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" },
+            { "type": "anyComponentStyle", "maximumWarning": "18kb", "maximumError": "24kb" }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/lego-tracker/proxy.conf.json"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "lego-tracker:build:production"
+        },
+        "development": {
+          "buildTarget": "lego-tracker:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "lego-tracker:build",
+        "staticFilePath": "dist/apps/lego-tracker/browser",
+        "spa": true
+      }
+    }
+  }
+}

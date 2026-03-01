@@ -1,0 +1,23 @@
+<span
+  class="source-avatar"
+  [style.width.px]="size"
+  [style.height.px]="size"
+>
+  @if (!isBroken) {
+    <img
+      [src]="logoUrl"
+      [alt]="(label || sourceId || 'provider') + ' logo'"
+      loading="lazy"
+      [style.width.px]="imageSize"
+      [style.height.px]="imageSize"
+      (error)="onImageError()"
+    >
+  } @else {
+    <span
+      class="source-avatar-fallback"
+      [style.font-size.px]="fallbackFontSize"
+    >
+      {{ fallbackText }}
+    </span>
+  }
+</span>

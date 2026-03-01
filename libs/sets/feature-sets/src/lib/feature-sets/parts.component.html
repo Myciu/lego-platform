@@ -1,0 +1,492 @@
+<div class="brickomat-page">
+  <header class="top-nav">
+    <a class="brand" href="/" (click)="$event.preventDefault()">
+      <brickomat-brand-logo></brickomat-brand-logo>
+    </a>
+
+    @if (cart().length > 0) {
+      <div class="top-cart-slot">
+        <button
+          type="button"
+          class="top-cart-btn"
+          (click)="openCartPage()"
+          [matTooltip]="'Porównaj ' + getCartTotalQuantity() + ' szt. w ' + getCartLineCount() + ' pozycjach koszyka'"
+          aria-label="Porównaj koszyk"
+        >
+          <span class="cart-bag">
+            <mat-icon>shopping_bag</mat-icon>
+            <span class="cart-badge">{{ getCartTotalQuantity() }}</span>
+          </span>
+          <span class="top-cart-title">Koszyk</span>
+          <span class="top-cart-count">{{ getCartTotalQuantity() }}</span>
+          <span class="top-cart-lines">{{ getCartLineCount() }} poz.</span>
+        </button>
+        <button
+          type="button"
+          class="top-cart-reset"
+          (click)="clearCart()"
+          matTooltip="Usuń wszystkie pozycje koszyka"
+          aria-label="Usuń cały koszyk"
+        >
+          <mat-icon>delete_sweep</mat-icon>
+          <span>Usuń wszystko</span>
+        </button>
+      </div>
+    }
+  </header>
+
+  <div class="promo-strip">
+    <p>
+      Porównywarka części LEGO. Wybierz elementy i kolory, a system znajdzie je
+      <strong>lepiej, szybciej, taniej..</strong>
+    </p>
+  </div>
+
+  <div class="catalog-shell">
+    <button type="button" mat-stroked-button class="mobile-filter-toggle" (click)="toggleMobileFilters()">
+      <mat-icon>tune</mat-icon>
+      Filtry
+      @if (getActiveFiltersCount() > 0) {
+        <span class="mobile-filter-count">{{ getActiveFiltersCount() }}</span>
+      }
+    </button>
+
+    @if (mobileFiltersOpen()) {
+      <div class="mobile-filter-backdrop" (click)="closeMobileFilters()">
+        <aside class="filter-sidebar mobile" (click)="$event.stopPropagation()">
+          <header class="filter-head">
+            <h2>Filtry</h2>
+            <button mat-icon-button (click)="closeMobileFilters()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </header>
+
+          <ng-container [ngTemplateOutlet]="filterContent"></ng-container>
+        </aside>
+      </div>
+    }
+
+    <aside class="filter-sidebar desktop">
+      <header class="filter-head">
+        <h2>Filtry</h2>
+        @if (getActiveFiltersCount() > 0) {
+          <button mat-button class="clear-link" (click)="clearAllFilters()">Reset</button>
+        }
+      </header>
+
+      <ng-container [ngTemplateOutlet]="filterContent"></ng-container>
+    </aside>
+
+    <main class="catalog-content">
+      <section class="catalog-heading">
+        <div>
+          <h1>Wyszukaj klocki LEGO, a my znajdziemy najtańszy miks ofert</h1>
+          <p>Dodaj części i kolory do koszyka. Porównamy sprzedawców i wybierzemy najtańszą kombinację.</p>
+        </div>
+        <div class="catalog-metrics">
+          <span>Wyniki: {{ totalParts() }}</span>
+          <span>Koszyk: {{ getCartTotalQuantity() }} szt.</span>
+        </div>
+      </section>
+
+      <section class="search-shell">
+        <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Szukaj części LEGO (nazwa lub ID)</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchQuery"
+            (keyup.enter)="onSearch()"
+            placeholder="np. Brick 2 x 4, 3001, Plate 1 x 2"
+          >
+          <button
+            mat-icon-button
+            matSuffix
+            class="search-suffix-btn"
+            (click)="onSearch()"
+            [disabled]="isLoading()"
+          >
+            <mat-icon>search</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <button mat-flat-button class="brand-btn search-btn" (click)="onSearch()" [disabled]="isLoading()">
+          Szukaj
+        </button>
+      </section>
+
+      @if (isLoading()) {
+        <section class="parts-grid skeleton-grid" aria-label="Ładowanie klocków">
+          @for (slot of skeletonCardSlots; track slot) {
+            <mat-card class="part-card skeleton-card">
+              <div class="media-area">
+                <div class="skeleton-block sk-image"></div>
+              </div>
+              <div class="card-body">
+                <div class="meta-row">
+                  <span class="meta-pill subtle skeleton-pill"></span>
+                </div>
+                <div class="skeleton-block sk-title"></div>
+                <div class="skeleton-block sk-title short"></div>
+                <div class="color-config">
+                  <div class="skeleton-block sk-line"></div>
+                  <div class="swatch-list">
+                    @for (swatch of skeletonSwatchSlots; track swatch) {
+                      <span class="skeleton-swatch"></span>
+                    }
+                  </div>
+                </div>
+                <div class="quantity-config">
+                  <div class="skeleton-block sk-line"></div>
+                  <div class="skeleton-block sk-qty"></div>
+                  <div class="skeleton-block sk-btn"></div>
+                </div>
+              </div>
+            </mat-card>
+          }
+        </section>
+      } @else {
+        @if (parts().length === 0) {
+          <section class="catalog-empty-state">
+            <mat-icon>search_off</mat-icon>
+            <div class="catalog-empty-copy">
+              <strong>Brak klocków dla bieżących filtrów.</strong>
+              <span>Zmień frazę lub zresetuj filtry.</span>
+            </div>
+          </section>
+        } @else {
+          <section class="parts-grid">
+            @for (part of parts(); track part.id) {
+              <mat-card class="part-card">
+                <div class="media-area">
+                  @if (part.imageUrl) {
+                    <img [src]="part.imageUrl" [alt]="part.name" loading="lazy">
+                  } @else {
+                    <div class="no-image">
+                      <mat-icon>image_not_supported</mat-icon>
+                      <span>Brak zdjęcia</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="card-body">
+                  <div class="meta-row">
+                    <span class="meta-pill subtle">
+                      {{ part.partCategoryName || ('Kat. ' + part.partCatId) }}
+                    </span>
+                  </div>
+
+                  <h3 [title]="part.name">{{ part.name }}</h3>
+
+                  @let idPreview = getPartIdPreview(part);
+                  @if (idPreview.legoIds.length > 0 || idPreview.hiddenPlatforms.length > 0) {
+                    <div class="meta-row part-ids-row">
+                      @if (idPreview.legoIds.length > 0) {
+                        <span
+                          class="meta-pill subtle"
+                          [title]="'LEGO: ' + idPreview.legoIds.join(', ')"
+                        >
+                          LEGO: {{ idPreview.legoIds.join(', ') }}
+                        </span>
+                      }
+
+                      @if (idPreview.hiddenPlatforms.length > 0) {
+                        <details class="part-id-preview">
+                          <summary>
+                            Podgląd +{{ idPreview.hiddenPlatforms.length }}
+                          </summary>
+                          <div class="part-id-preview-list">
+                            @for (platform of idPreview.hiddenPlatforms; track platform.platform) {
+                              <span
+                                class="meta-pill subtle"
+                                [title]="platform.platform + ': ' + platform.ids.join(', ')"
+                              >
+                                {{ platform.platform }}: {{ platform.ids.join(', ') }}
+                              </span>
+                            }
+                          </div>
+                        </details>
+                      }
+                    </div>
+                  }
+
+                  <div class="color-config">
+                    <p class="section-label">Kolor</p>
+
+                    @if (hasSelectableColors(part)) {
+                      <div class="swatch-list">
+                        @for (color of part.colorInfo.colors.slice(0, 12); track color.color_id) {
+                          <button
+                            type="button"
+                            class="color-swatch"
+                            [class.active]="isSelectedPartColor(part, color.color_id)"
+                            [style.background-color]="asCssColor(color.color_rgb)"
+                            [class.translucent]="color.is_trans"
+                            [matTooltip]="color.color_name"
+                            (click)="setSelectedPartColor(part, color.color_id)"
+                          ></button>
+                        }
+                        @if (part.colorInfo.totalColors > 12) {
+                          <button
+                            type="button"
+                            class="swatch-more"
+                            (click)="openRemainingColors(part)"
+                            [matTooltip]="'Pokaż wszystkie kolory (' + part.colorInfo.totalColors + ')'"
+                          >
+                            +{{ part.colorInfo.totalColors - 12 }}
+                          </button>
+                        }
+                      </div>
+
+                      <p class="selected-color">
+                        Wybrany: <strong>{{ getSelectedPartColorName(part) }}</strong>
+                      </p>
+                    } @else {
+                      <p class="no-color-info">Brak wariantów koloru, ale możesz dodać element do koszyka.</p>
+                    }
+                  </div>
+
+                  <div class="cart-composer" [class.in-cart]="getSelectedPartQuantity(part) > 0">
+                    <div class="qty-pod">
+                      <span class="qty-label">Ilość</span>
+                      <div class="qty-controls">
+                        <button
+                          type="button"
+                          class="qty-mini-btn"
+                          (click)="adjustDraftQuantity(part, -1)"
+                          [disabled]="getDraftQuantity(part) <= 0"
+                          aria-label="Zmniejsz ilość"
+                        >
+                          <span class="qty-glyph minus" aria-hidden="true"></span>
+                        </button>
+
+                        <input
+                          type="text"
+                          class="qty-raw-input"
+                          [ngModel]="getDraftQuantityInputValue(part)"
+                          (ngModelChange)="setDraftQuantityFromInput(part, $event)"
+                          (blur)="commitDraftQuantity(part)"
+                          inputmode="numeric"
+                          pattern="[0-9]*"
+                          aria-label="Ilość sztuk"
+                        >
+
+                        <button
+                          type="button"
+                          class="qty-mini-btn"
+                          (click)="adjustDraftQuantity(part, 1)"
+                          aria-label="Zwiększ ilość"
+                        >
+                          <span class="qty-glyph plus" aria-hidden="true"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      class="add-cart-btn"
+                      (click)="addDraftToCart(part)"
+                      [disabled]="getDraftQuantity(part) <= 0"
+                      aria-label="Dodaj do koszyka"
+                    >
+                      <mat-icon>add_shopping_cart</mat-icon>
+                      Dodaj do koszyka
+                    </button>
+
+                    @if (getSelectedPartQuantity(part) > 0) {
+                      <div class="cart-summary-row">
+                        <p class="cart-summary">
+                          W koszyku: <strong>{{ getSelectedPartQuantity(part) }} szt.</strong>
+                        </p>
+                        <div class="cart-inline-actions">
+                          <button
+                            type="button"
+                            class="cart-inline-btn"
+                            (click)="decrementCartItem(part)"
+                            aria-label="Usuń jedną sztukę z koszyka"
+                          >
+                            -1
+                          </button>
+                          <button
+                            type="button"
+                            class="cart-inline-btn"
+                            (click)="addToCart(part, 1)"
+                            aria-label="Dodaj jedną sztukę do koszyka"
+                          >
+                            +1
+                          </button>
+                          <button
+                            type="button"
+                            class="cart-inline-btn danger"
+                            (click)="removeCartItem(part)"
+                            aria-label="Usuń ten wariant z koszyka"
+                          >
+                            Usuń
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <p class="cart-summary">Jeszcze nie dodano do koszyka</p>
+                    }
+                  </div>
+                </div>
+              </mat-card>
+            }
+          </section>
+        }
+
+        @if (totalParts() > 0) {
+          <mat-paginator
+            [length]="totalParts()"
+            [pageSize]="pageSize()"
+            [pageIndex]="currentPage()"
+            [pageSizeOptions]="[10, 20, 40]"
+            (page)="handlePageEvent($event)"
+            aria-label="Wybierz stronę"
+          >
+          </mat-paginator>
+        }
+      }
+    </main>
+  </div>
+
+  @if (cart().length > 0) {
+    <div class="cart-fab-container">
+      <button
+        type="button"
+        class="cart-mini-btn"
+        (click)="openCartPage()"
+        [matTooltip]="'Porównaj ' + getCartTotalQuantity() + ' szt. w ' + getCartLineCount() + ' pozycjach koszyka'"
+        aria-label="Porównaj koszyk"
+      >
+        <mat-icon>shopping_bag</mat-icon>
+        <span class="cart-mini-badge">{{ getCartTotalQuantity() }}</span>
+      </button>
+    </div>
+  }
+</div>
+
+<ng-template #filterContent>
+  <mat-accordion class="filter-accordion" multi>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Kategorie</mat-panel-title>
+        <mat-panel-description>{{ getCategoryFilterSummary() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div>
+        <button
+          mat-button
+          type="button"
+          class="clear-link"
+          (click)="resetCategoryFilters()"
+          [disabled]="selectedCategoryIds().length === 0"
+        >
+          Resetuj
+        </button>
+      </div>
+
+      <div class="filter-list">
+        @for (category of categories(); track category.id) {
+          <button
+            type="button"
+            class="list-option"
+            [class.active]="isCategorySelected(category.id)"
+            (click)="toggleCategory(category.id)"
+          >
+            <span>{{ category.name }}</span>
+            <small>{{ category.partCount }}</small>
+          </button>
+        }
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Kolory</mat-panel-title>
+        <mat-panel-description>{{ getColorFilterSummary() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div>
+        <button
+          mat-button
+          type="button"
+          class="clear-link"
+          (click)="resetColorFilters()"
+          [disabled]="selectedColorIds().length === 0"
+        >
+          Resetuj
+        </button>
+      </div>
+
+      <div class="color-filter-grid">
+        @for (color of colors(); track color.id) {
+          <button
+            type="button"
+            class="color-option"
+            [class.active]="isColorSelected(color.id)"
+            (click)="toggleColor(color.id)"
+            [matTooltip]="color.name + ' (' + color.partCount + ')'"
+          >
+            <span
+              class="color-dot"
+              [style.background-color]="asCssColor(color.rgb)"
+              [class.translucent]="color.isTrans"
+            ></span>
+            <span class="color-name">{{ color.name }}</span>
+            <small>{{ color.partCount }}</small>
+          </button>
+        }
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel [expanded]="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>Dostawcy</mat-panel-title>
+        <mat-panel-description>{{ getProviderFilterSummary() }}</mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div>
+        <button
+          mat-button
+          type="button"
+          class="clear-link"
+          (click)="resetProviderFilters()"
+          [disabled]="selectedProviderIds().length === 0"
+        >
+          Resetuj
+        </button>
+      </div>
+
+      <div class="filter-list">
+        @for (source of providerSources(); track source.id) {
+          <button
+            type="button"
+            class="list-option provider-option"
+            [class.active]="isProviderFilterSelected(source.id)"
+            [class.disabled]="!source.enabled || !source.configured"
+            [disabled]="!source.enabled || !source.configured"
+            (click)="toggleProviderFilter(source.id)"
+          >
+            <span class="provider-brand">
+              <offer-provider-avatar
+                [sourceId]="source.id"
+                [label]="source.label"
+                [size]="16"
+              ></offer-provider-avatar>
+              <span class="provider-name">{{ source.label }}</span>
+            </span>
+            <small>
+              {{
+                !source.enabled
+                  ? 'Wyłączony'
+                  : !source.configured
+                    ? 'Brak kluczy'
+                    : 'Aktywny'
+              }}
+            </small>
+          </button>
+        }
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+</ng-template>
