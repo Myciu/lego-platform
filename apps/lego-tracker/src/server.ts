@@ -6,25 +6,96 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { dirname, resolve } from 'node:path';
+import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 
 const serverDistFolder = dirname(fileURLToPath(import.meta.url));
 const browserDistFolder = resolve(serverDistFolder, '../browser');
+const defaultStagingApiTarget = 'https://api-staging-6148.up.railway.app';
+const fallbackStagingHosts = new Set([
+  'web-staging-19b6.up.railway.app',
+  'dev.brickomat.pl',
+]);
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+const configuredApiProxyTarget = String(process.env['API_PROXY_TARGET'] || '')
+  .trim()
+  .replace(/\/+$/, '');
+
+function resolveApiProxyTarget(req: express.Request): string {
+  if (configuredApiProxyTarget) {
+    return configuredApiProxyTarget;
+  }
+
+  const hostHeader = String(req.headers.host || '')
+    .trim()
+    .toLowerCase()
+    .split(':')[0];
+
+  if (fallbackStagingHosts.has(hostHeader)) {
+    return defaultStagingApiTarget;
+  }
+
+  return '';
+}
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/**', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Reverse proxy for API calls when frontend and backend run on separate services.
+ * Set API_PROXY_TARGET, e.g. https://api-staging-xxxx.up.railway.app
  */
+app.use('/api/**', async (req, res, next) => {
+  const apiProxyTarget = resolveApiProxyTarget(req);
+  if (!apiProxyTarget) {
+    return next();
+  }
+
+  try {
+    const targetUrl = new URL(req.originalUrl, `${apiProxyTarget}/`).toString();
+    const headers = new Headers();
+
+    Object.entries(req.headers).forEach(([key, value]) => {
+      if (!value) return;
+      if (key.toLowerCase() === 'host') return;
+      if (Array.isArray(value)) {
+        value.forEach((entry) => headers.append(key, entry));
+        return;
+      }
+      headers.set(key, value);
+    });
+
+    const requestInit: RequestInit & { duplex?: 'half' } = {
+      method: req.method,
+      headers,
+      redirect: 'manual',
+    };
+
+    if (!['GET', 'HEAD'].includes(req.method.toUpperCase())) {
+      requestInit.body = req as any;
+      requestInit.duplex = 'half';
+    }
+
+    const response = await fetch(targetUrl, requestInit);
+    res.status(response.status);
+
+    response.headers.forEach((value, key) => {
+      const normalized = key.toLowerCase();
+      if (['connection', 'keep-alive', 'transfer-encoding'].includes(normalized)) {
+        return;
+      }
+      res.setHeader(key, value);
+    });
+
+    if (!response.body) {
+      res.end();
+      return;
+    }
+
+    Readable.fromWeb(response.body as any).pipe(res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * Serve static files from /browser
